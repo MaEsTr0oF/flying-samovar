@@ -181,14 +181,16 @@ class FlyingSamovarTests(SamovarTestCase):
 
     def test_TC_M_14_not_enough_steam(self):
         """TC_M_14: нехватка пара не меняет состояние."""
-        for terrain, steam in [("air", 5), ("headwind", 8.99999999)]:
-            with self.subTest(terrain=terrain):
+        cases = [("air", 5, 3), ("headwind", 8.99999999, 3),
+                 ("air", 100, 100)]
+        for terrain, steam, distance in cases:
+            with self.subTest(terrain=terrain, distance=distance):
                 # Arrange
                 samovar = self.make_samovar(steam=steam)
                 samovar.deploy_wings()
                 # Act / Assert
                 self.assert_unchanged_error(samovar, self.module.SamovarNotEnoughSteam,
-                                            lambda: samovar.move(3, terrain))
+                                            lambda: samovar.move(distance, terrain))
 
     def test_TC_M_15_wings_folded(self):
         """TC_M_15: полёт требует раскрытых крыльев."""
