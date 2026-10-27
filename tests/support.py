@@ -26,3 +26,14 @@ class SamovarTestCase(unittest.TestCase):
     def assert_result(self, actual, expected):
         self.assertIs(type(actual), float)
         self.assertAlmostEqual(actual, expected, places=7)
+
+    def assert_calculated_state(self, actual, expected, changed):
+        """Вычисленные поля — с погрешностью, остальные — точно."""
+        self.assertEqual(actual.keys(), expected.keys())
+        for name, value in expected.items():
+            with self.subTest(attribute=name):
+                if name in changed:
+                    self.assert_result(actual[name], value)
+                else:
+                    self.assertIs(type(actual[name]), type(value))
+                    self.assertEqual(actual[name], value)

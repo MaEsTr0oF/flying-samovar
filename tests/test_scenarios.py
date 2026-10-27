@@ -15,8 +15,8 @@ class SamovarScenarios(SamovarTestCase):
         # Then
         self.assert_result(first, 0.25)
         self.assert_result(second, 0.125)
-        self.assertEqual(samovar.steam, 70.0)
-        self.assertEqual(samovar.position_km, 15.0)
+        self.assert_result(samovar.steam, 70.0)
+        self.assert_result(samovar.position_km, 15.0)
         self.assertIs(samovar.is_flying, True)
         # When
         pilot.land()
@@ -24,8 +24,8 @@ class SamovarScenarios(SamovarTestCase):
         # Then
         self.assertIs(samovar.is_flying, False)
         self.assertIs(samovar.wings_deployed, False)
-        self.assertEqual(samovar.steam, 70.0)
-        self.assertEqual(samovar.position_km, 15.0)
+        self.assert_result(samovar.steam, 70.0)
+        self.assert_result(samovar.position_km, 15.0)
 
     def test_TC_S_02_windy_return(self):
         """TC_S_02: спокойный участок, ветер и река."""
@@ -39,8 +39,8 @@ class SamovarScenarios(SamovarTestCase):
         # Then
         self.assert_result(first, 0.25)
         self.assert_result(second, 0.5)
-        self.assertEqual(samovar.steam, 40.0)
-        self.assertEqual(samovar.position_km, 20.0)
+        self.assert_result(samovar.steam, 40.0)
+        self.assert_result(samovar.position_km, 20.0)
         before = self.state(samovar)
         self.assertIs(pilot.check_obstacle("river"), True)
         self.assertEqual(self.state(samovar), before)
@@ -65,15 +65,15 @@ class SamovarScenarios(SamovarTestCase):
         first = pilot.fly(3)
         # Then
         self.assert_result(first, 0.075)
-        self.assertEqual(samovar.steam, 0.0)
+        self.assert_result(samovar.steam, 0.0)
         self.assertIs(samovar.is_flying, True)
         # When
         pilot.land()
         pilot.refill(10)
         pilot.fly(1)
         # Then
-        self.assertEqual(samovar.steam, 8.0)
-        self.assertEqual(samovar.position_km, 4.0)
+        self.assert_result(samovar.steam, 8.0)
+        self.assert_result(samovar.position_km, 4.0)
         self.assertIs(samovar.is_flying, True)
 
     def test_TC_S_04_refill_after_landing(self):
@@ -85,8 +85,8 @@ class SamovarScenarios(SamovarTestCase):
         pilot.prepare()
         pilot.fly(5)
         # Then
-        self.assertEqual(samovar.steam, 20.0)
-        self.assertEqual(samovar.position_km, 5.0)
+        self.assert_result(samovar.steam, 20.0)
+        self.assert_result(samovar.position_km, 5.0)
         self.assert_unchanged_error(samovar, self.module.SamovarInFlight,
                                     pilot.pack_wings)
         self.assert_unchanged_error(samovar, self.module.SamovarInFlight,
@@ -99,8 +99,8 @@ class SamovarScenarios(SamovarTestCase):
         time = pilot.fly_against_wind(0.125)
         # Then
         self.assert_result(time, 0.00625)
-        self.assertEqual(samovar.steam, 19.875)
-        self.assertEqual(samovar.position_km, 5.125)
+        self.assert_result(samovar.steam, 19.875)
+        self.assert_result(samovar.position_km, 5.125)
         self.assertIs(samovar.is_flying, True)
 
     def test_TC_S_05_fence_and_river(self):
@@ -121,8 +121,8 @@ class SamovarScenarios(SamovarTestCase):
         self.assertIs(pilot.check_obstacle("river"), True)
         self.assertIs(pilot.check_obstacle("storm"), False)
         self.assertEqual(self.state(samovar), before)
-        self.assertEqual(samovar.steam, 18.0)
-        self.assertEqual(samovar.position_km, 1.0)
+        self.assert_result(samovar.steam, 18.0)
+        self.assert_result(samovar.position_km, 1.0)
         # When
         pilot.land()
         # Then
@@ -140,8 +140,8 @@ class SamovarScenarios(SamovarTestCase):
         pilot.prepare()
         pilot.fly(10)
         # Then
-        self.assertEqual(samovar.steam, 0.0)
-        self.assertEqual(samovar.position_km, 10.0)
+        self.assert_result(samovar.steam, 0.0)
+        self.assert_result(samovar.position_km, 10.0)
         self.assertIs(samovar.is_flying, True)
         self.assert_unchanged_error(samovar, self.module.SamovarNotEnoughSteam,
                                     lambda: pilot.fly(0.5))
@@ -154,7 +154,7 @@ class SamovarScenarios(SamovarTestCase):
         pilot.land()
         # Then
         self.assert_result(time, 0.25)
-        self.assertEqual(samovar.steam, 5.0)
-        self.assertEqual(samovar.position_km, 15.0)
+        self.assert_result(samovar.steam, 5.0)
+        self.assert_result(samovar.position_km, 15.0)
         self.assertIs(samovar.wings_deployed, True)
         self.assertIs(samovar.is_flying, False)

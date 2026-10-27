@@ -58,7 +58,8 @@ class FlyingSamovarTests(SamovarTestCase):
         invalid = {"wing_span_m": [0, 0.5, 10.1],
                    "max_speed_kmh": [0, 0.5, 120.1], "steam": [-0.1, 100.1]}
         for name, values in invalid.items():
-            for value in values + [float("nan"), float("inf"), -float("inf")]:
+            for value in values + [10**1000, -(10**1000), float("nan"),
+                                   float("inf"), -float("inf")]:
                 with self.subTest(name=name, value=value):
                     # Arrange / Act / Assert
                     with self.assertRaises(ValueError):
@@ -146,8 +147,9 @@ class FlyingSamovarTests(SamovarTestCase):
         # Assert
         self.assert_result(first, 0.25)
         self.assert_result(second, 0.00625)
-        self.assertEqual(self.state(samovar), before | {
-            "steam": 79.5, "position_km": 10.25, "is_flying": True})
+        self.assert_calculated_state(self.state(samovar), before | {
+            "steam": 79.5, "position_km": 10.25, "is_flying": True},
+            changed={"steam", "position_km"})
 
     def test_TC_M_12_headwind(self):
         """TC_M_12: ветер уменьшает скорость и повышает расход."""
@@ -159,22 +161,25 @@ class FlyingSamovarTests(SamovarTestCase):
         result = samovar.move(10, "headwind")
         # Assert
         self.assert_result(result, 0.5)
-        self.assertEqual(self.state(samovar), before | {
-            "steam": 70.0, "position_km": 10.0, "is_flying": True})
+        self.assert_calculated_state(self.state(samovar), before | {
+            "steam": 70.0, "position_km": 10.0, "is_flying": True},
+            changed={"steam", "position_km"})
 
     def test_TC_M_13_exact_steam(self):
         """TC_M_13: точного запаса хватает, автоматической посадки нет."""
-        for terrain, steam in [("air", 20), ("headwind", 30)]:
-            with self.subTest(terrain=terrain):
+        cases = [("air", 20, 10), ("headwind", 30, 10), ("air", 100, 50)]
+        for terrain, steam, distance in cases:
+            with self.subTest(terrain=terrain, distance=distance):
                 # Arrange
                 samovar = self.make_samovar(steam=steam)
                 samovar.deploy_wings()
                 # Act
-                result = samovar.move(10, terrain)
+                result = samovar.move(distance, terrain)
                 # Assert
-                self.assert_result(result, 0.25 if terrain == "air" else 0.5)
-                self.assertEqual(samovar.steam, 0.0)
-                self.assertEqual(samovar.position_km, 10.0)
+                speed = 40 if terrain == "air" else 20
+                self.assert_result(result, distance / speed)
+                self.assert_result(samovar.steam, 0.0)
+                self.assert_result(samovar.position_km, float(distance))
                 self.assertIs(samovar.is_flying, True)
                 self.assert_unchanged_error(samovar, self.module.SamovarNotEnoughSteam,
                                             lambda: samovar.move(0.25, terrain))
@@ -215,7 +220,7 @@ class FlyingSamovarTests(SamovarTestCase):
         # Arrange
         samovar = self.make_samovar()
         invalid = [(v, TypeError) for v in (True, False, "1", None, complex(1, 2))]
-        invalid += [(v, ValueError) for v in (0, -1, 100.1, float("nan"),
+        invalid += [(v, ValueError) for v in (0, -1, 100.1, 10**1000, -(10**1000), float("nan"),
                                             float("inf"), -float("inf"))]
         for value, error in invalid:
             with self.subTest(distance=value):
@@ -265,7 +270,8 @@ class FlyingSamovarTests(SamovarTestCase):
         cases = [(True, "air", TypeError), ("1", "air", TypeError),
                  (None, "air", TypeError), (complex(1, 2), "air", TypeError),
                  (0, "water", ValueError), (-1, "air", ValueError),
-                 (100.1, "air", ValueError), (float("nan"), "air", ValueError),
+                 (100.1, "air", ValueError), (10**1000, "air", ValueError),
+                 (-(10**1000), "air", ValueError), (float("nan"), "air", ValueError),
                  (float("inf"), "air", ValueError), (-float("inf"), "air", ValueError),
                  (1, "water", self.module.SamovarCannotMoveHere),
                  (1, "ground", self.module.SamovarCannotMoveHere),
@@ -305,15 +311,17 @@ class FlyingSamovarTests(SamovarTestCase):
         before = self.state(samovar)
         # Act / Assert
         self.assertIsNone(samovar.refuel(amount=0.25))
-        self.assertEqual(self.state(samovar), before | {"steam": 60.25})
+        self.assert_calculated_state(self.state(samovar),
+                                     before | {"steam": 60.25}, changed={"steam"})
         self.assertIs(type(samovar.steam), float)
         self.assertIsNone(samovar.refuel(1000))
-        self.assertEqual(self.state(samovar), before | {"steam": 100.0})
+        self.assert_calculated_state(self.state(samovar),
+                                     before | {"steam": 100.0}, changed={"steam"})
         before = self.state(samovar)
         self.assertIsNone(samovar.refuel(1))
         self.assertEqual(self.state(samovar), before)
         cases = [(v, TypeError) for v in (True, False, "1", None, complex(1, 2))]
-        cases += [(v, ValueError) for v in (0, -1, 1000.1, float("nan"),
+        cases += [(v, ValueError) for v in (0, -1, 1000.1, 10**1000, -(10**1000), float("nan"),
                                           float("inf"), -float("inf"))]
         for value, error in cases:
             with self.subTest(value=value):
