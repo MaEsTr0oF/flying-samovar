@@ -60,6 +60,10 @@ samovar.refuel(10)
 print(samovar.get_status())
 ```
 
-## Перед отправкой PR
+## Приёмка и защита
 
-Проверь реализацию и запусти тесты. В свою ветку достаточно добавить `flying_samovar.py`, этот README и `BUGREPORT.md`, затем открыть PR в main. Файлы SPEC.md, TEST_CASES.md и tests/ менять не нужно.
+[Реализация Ильи — PR №4](https://github.com/MaEsTr0oF/flying-samovar/pull/4) проверена и принята 28.10.2026. Все 30 тестов проходят на Python 3.12, ТЗ и тесты не изменялись.
+
+- [DEMO.md](DEMO.md) — команды и проверенный вывод демонстрации.
+- [demo.py](demo.py) — запуск: `python3 demo.py`.
+- [PRESENTATION.md](PRESENTATION.md) — короткий план защиты.
